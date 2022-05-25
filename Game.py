@@ -3,12 +3,12 @@ from functools import partial
 
 class Game:
 
-    def __init__(self, moveFunc):
-        self.playerPos  = [0,0]
-        self.moveLeft   = partial(moveFunc, direction = (-1,  0))
-        self.moveRight  = partial(moveFunc, direction = ( 1,  0))
-        self.moveUp     = partial(moveFunc, direction = ( 0,  1))
-        self.moveDown   = partial(moveFunc, direction = ( 0, -1))
+    def __init__(self, board):
+        self.board = board
+        self.moveLeft   = partial(board.move, direction = (-1,  0))
+        self.moveRight  = partial(board.move, direction = ( 1,  0))
+        self.moveUp     = partial(board.move, direction = ( 0,  1))
+        self.moveDown   = partial(board.move, direction = ( 0, -1))
 
     def keyevent(self, key):
         if(key == Qt.Key_Left or key == Qt.Key_A):

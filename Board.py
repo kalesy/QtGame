@@ -5,7 +5,8 @@ import random
 
 class Board(QFrame):
 
-    def __init__(self, parent):
+    def __init__(self, parent, cellSize):
+        self.cellSize = cellSize
         self.boardWidth = 15
         self.boardHeight = 15
         super().__init__(parent)
@@ -61,16 +62,13 @@ class Board(QFrame):
                     self.grid[i] = 8
                 elif(random.random() < 0.2):
                     self.grid[i] = 'w'
+        return start_2d
 
     def __getitem__(self, x_y):
         return self.grid[x_y[0] + self.boardWidth * x_y[1]]
 
     def __setitem__(self, x_y:tuple, board_cell_data):
         self.grid[x_y[0] + self.width * x_y[1]] = board_cell_data
-
-    # 找到出口触发的函数
-    def triggerEnd(self):
-        pass
 
     def drawBoard(self, painter):
 
@@ -79,29 +77,30 @@ class Board(QFrame):
         # 游戏网格
         for x in range(self.boardWidth):
             for y in range(self.boardHeight):
-                gridX = x * 32 + 8
-                gridY = y * 32 + 8
+                gridX = x * self.cellSize + 8
+                gridY = y * self.cellSize + 8
                 if(self[x, y] == 9):
-                    painter.fillRect(gridX, gridY, 32, 32, QColor(0, 0, 0))
+                    painter.fillRect(gridX, gridY, self.cellSize, self.cellSize, QColor(0, 0, 0))
                 elif(self[x, y] == 'p'):
-                    painter.fillRect(gridX, gridY, 32, 32, QColor(0, 0, 255))
+                    painter.fillRect(gridX, gridY, self.cellSize, self.cellSize, QColor(0, 0, 255))
                 elif(self[x, y] == 8):
-                    painter.fillRect(gridX, gridY, 32, 32, QColor(255, 0, 0))
+                    painter.fillRect(gridX, gridY, self.cellSize, self.cellSize, QColor(255, 0, 0))
                 elif(self[x, y] == 'w'):
-                    painter.fillRect(gridX, gridY, 32, 32, QColor(153, 153, 153))
+                    painter.fillRect(gridX, gridY, self.cellSize, self.cellSize, QColor(153, 153, 153))
                 elif(self[x, y] == 'e'):
-                        painter.fillRect(gridX, gridY, 32, 32, QColor(0, 153, 0))
+                    painter.fillRect(gridX, gridY, self.cellSize, self.cellSize, QColor(153, 153, 153))
+                    #painter.fillRect(gridX, gridY, self.cellSize, self.cellSize, QColor(0, 153, 0))
                         
 
 
                 #画格子
-                painter.drawRect(gridX, gridY, 32, 32)
+                painter.drawRect(gridX, gridY, self.cellSize, self.cellSize)
 
         # 状态界面
-        rightPanelStartX = self.boardWidth * 32 + 8
+        rightPanelStartX = self.boardWidth * self.cellSize + 8
         rightPanelStartY = 8
 
-        painter.drawRect(rightPanelStartX, rightPanelStartY, 200, self.boardHeight * 32)
+        painter.drawRect(rightPanelStartX, rightPanelStartY, 200, self.boardHeight * self.cellSize)
 
         painter.drawText(rightPanelStartX + 60, rightPanelStartY + 20, Qt.AlignCenter, 40, 40, f"玩  家")
         painter.drawText(rightPanelStartX + 60, rightPanelStartY + 60, Qt.AlignCenter, 40, 40, f"生命值：{99}")
@@ -116,6 +115,8 @@ class Board(QFrame):
 
 
     def move(self, direction:tuple, posFrom):
+        playerPos = [posFrom % self.boardWidth, posFrom // self.boardWidth]
+        print(playerPos)
         posEnd = direction[0] + self.boardWidth * direction[1] + posFrom
         if(posEnd < self.boardWidth or posEnd > (self.boardWidth * (self.boardHeight - 1))):
             return
