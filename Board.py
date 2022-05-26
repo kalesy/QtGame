@@ -86,12 +86,9 @@ class Board(QFrame):
             if(i == 8):
                 self.gridCellData.append(Enemy(self.layer))
             elif(i == 'fw'):
-                if(random.random() < 0.3):
-                    self.gridCellData.append(FakeWall(self.layer))
-                else:
-                    self.gridCellData.append(Wall())
+                self.gridCellData.append(FakeWall(self.layer))
             else:
-                self.gridCellData.append(Unit('Weapon'))
+                self.gridCellData.append(Unit('empty'))
 
 
     def getCellUnitData(self, x, y):
@@ -154,6 +151,7 @@ class Board(QFrame):
 
     def move(self, direction:tuple):
 
+        self.game.currentEnemy = None
         playerPos = self.getPlayerPos(2)
         endPos = [playerPos[0] + direction[0], playerPos[1] + direction[1]]
         if(endPos[0] < 0 or endPos[0] > 14 or endPos[1] < 0 or endPos[1] > 14):
@@ -162,9 +160,20 @@ class Board(QFrame):
             self.grid[self.getPlayerPos(1)] = 0
             self[endPos[0], endPos[1]] = 'p'
         elif(self[endPos[0], endPos[1]] == 8):
-            self.game.engage(self.getCellUnitData(endPos[0], endPos[1]))
-        elif(self[endPos[0], endPos[1]] == 8):
+            result = self.game.engage(self.getCellUnitData(endPos[0], endPos[1]))
+            if(result == 'enemyDown'):
+                self.grid[endPos[0] + self.boardWidth * endPos[1]] = 0
+                self.cellClean(endPos)
+        elif(self[endPos[0], endPos[1]] == 'fw'):
+            self.game.player.takeItem(self.getCellUnitData(endPos[0], endPos[1]).item)
+            self.cellClean(endPos)
+        elif(self[endPos[0], endPos[1]] == 'e'):
+            self.newStage()
 
-            
-        #if(posEnd > self.boardWidth or posEnd < (self.boardWidth * (self.boardHeight - 1))):
 
+    def cellClean(self, x_y):
+        self.grid[x_y[0] + self.boardWidth * x_y[1]] = 0
+
+    def newStage(self):
+        self.layer += 1
+        self.createStage()

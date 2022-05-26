@@ -1,4 +1,4 @@
-from PyQt5.QtWidgets import QMainWindow, QFrame, QDesktopWidget, QApplication
+from PyQt5.QtWidgets import QMainWindow, QFrame, QDesktopWidget, QApplication, QMessageBox
 from PyQt5.QtCore import Qt, pyqtSignal
 from PyQt5.QtGui import QPainter, QColor, QPixmap, QPen
 import sys, random, math
@@ -18,7 +18,6 @@ class RandomDungeon(QMainWindow):
         self.board.game = self.game
         self.setCentralWidget(self.board)
 
-
         self.resize(self.board.boardWidth * self.cellSize + 16 + 200, self.board.boardHeight * self.cellSize + 16)
 
         screen = QDesktopWidget().screenGeometry()
@@ -35,7 +34,8 @@ class RandomDungeon(QMainWindow):
             self.game.keyevent(event.key())
 
     def gameover(self):
-        pass
+        QMessageBox.information(self, "Information", "游戏结束")
+        QApplication.exit(0)
 
 
     def paintEvent(self, event):
@@ -45,7 +45,6 @@ class RandomDungeon(QMainWindow):
         painter.begin(self)
 
         self.board.drawBoard(painter)
-
         # 结束画图
         painter.end()
 

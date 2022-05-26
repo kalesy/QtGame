@@ -19,15 +19,18 @@ class Game:
             self.board.move([0, 1])
 
     def update(self):
-        if(self.player.hp == 0):
+        if(self.player.hp < 1):
             return 'gameover'
 
     def engage(self, enemy):
         self.currentEnemy = enemy
-        while(True):
-            if(self.currentEnemy.hp <=0):
-                pass
-                #self.game.player.
+        if(self.player.hp < 1):
+            return 'playerDown'
+        if(self.currentEnemy.hp < 1):
+            self.player.gainExp(self.currentEnemy.expOnKill)
+            return 'enemyDown'
+        self.player.takeDamage(self.currentEnemy.attack)
+        self.currentEnemy.takeDamage(self.player.attack)
 
 
 

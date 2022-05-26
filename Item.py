@@ -12,12 +12,12 @@ class Weapon(Item):
 
     def __init__(self, layer):
         super().__init__('weapon')
-        self.attackUp = int(1.1 ** layer * BaseAttack * random.uniform(1.0, 1.3))
+        self.attack = int((1.1 ** layer) * Weapon.BaseAttack * random.uniform(1.0, 1.3))
 
 class HpUp(Item):
 
     BaseHp = 5
-    def __init__(self):
+    def __init__(self, layer):
         super().__init__('hpup')
-        self.hpup = int(1.2 ** layer * BaseHp * random.uniform(1.0, 1.3))
+        self.hpup = int((1.2 ** layer) * HpUp.BaseHp * random.uniform(1.0, 1.3))
 
