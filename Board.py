@@ -1,19 +1,25 @@
 from PyQt5.QtWidgets import QFrame
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QColor
-from Cell import Cell
 import random
+
+from Unit import Character, Enemy, Player, Wall, FakeWall, Unit
+
 
 class Board(QFrame):
 
     def __init__(self, parent, cellSize):
+        self.layer = 1
         self.cellSize = cellSize
         self.boardWidth = 15
         self.boardHeight = 15
         super().__init__(parent)
         self.setFocusPolicy(Qt.StrongFocus)
-        self.createStage()
+        self.newRound()
         self.game = None
+
+    def newRound(self):
+        self.createStage()
 
     # 除了墙其他的东西
     # 8 怪
@@ -37,7 +43,6 @@ class Board(QFrame):
 
     def createStage(self):
         self.grid = [0 for x in range(self.boardWidth * self.boardHeight)]
-
         # 生成玩家
         start_2d = [random.randint(1, self.boardWidth - 2), random.randint(1, self.boardHeight - 2)]
         start_1d = start_2d[0] + self.boardWidth * start_2d[1]
@@ -71,13 +76,34 @@ class Board(QFrame):
                 if(random.random() < 0.1):
                     self.grid[i] = 8
                 elif(random.random() < 0.2):
-                    self.grid[i] = 'w'
+                    if(random.random() < 0.2):
+                        self.grid[i] = 'fw'
+                    else:
+                        self.grid[i] = 'w'
+
+        self.gridCellData = []
+        for i in self.grid:
+            if(i == 8):
+                self.gridCellData.append(Enemy(self.layer))
+            elif(i == 'fw'):
+                if(random.random() < 0.3):
+                    self.gridCellData.append(FakeWall(self.layer))
+                else:
+                    self.gridCellData.append(Wall())
+            else:
+                self.gridCellData.append(Unit('Weapon'))
+
+
+    def getCellUnitData(self, x, y):
+        return self.gridCellData[x + y * self.boardWidth]
 
     def __getitem__(self, x_y):
-        return self.grid[x_y[0] + self.boardWidth * x_y[1]]
+        i = x_y[0] + self.boardWidth * x_y[1]
+        return self.grid[i]#, self.gridCellData[i]
 
-    def __setitem__(self, x_y:tuple, board_cell_data):
-        self.grid[x_y[0] + self.boardWidth * x_y[1]] = board_cell_data
+    def __setitem__(self, x_y:tuple, data):
+        i = x_y[0] + self.boardWidth * x_y[1]
+        self.grid[i] = data
 
     def drawBoard(self, painter):
 
@@ -96,6 +122,8 @@ class Board(QFrame):
                     painter.fillRect(gridX, gridY, self.cellSize, self.cellSize, QColor(255, 0, 0))
                 elif(self[x, y] == 'w'):
                     painter.fillRect(gridX, gridY, self.cellSize, self.cellSize, QColor(153, 153, 153))
+                elif(self[x, y] == 'fw'):
+                    painter.fillRect(gridX, gridY, self.cellSize, self.cellSize, QColor(90, 90, 90))
                 elif(self[x, y] == 'e'):
                     painter.fillRect(gridX, gridY, self.cellSize, self.cellSize, QColor(100, 100, 100))
                     #painter.fillRect(gridX, gridY, self.cellSize, self.cellSize, QColor(0, 153, 0))
@@ -112,18 +140,20 @@ class Board(QFrame):
         painter.drawRect(rightPanelStartX, rightPanelStartY, 200, self.boardHeight * self.cellSize)
 
         painter.drawText(rightPanelStartX + 60, rightPanelStartY + 20, Qt.AlignCenter, 40, 40, f"玩  家")
-        painter.drawText(rightPanelStartX + 60, rightPanelStartY + 60, Qt.AlignCenter, 40, 40, f"生命值：{99}")
-        painter.drawText(rightPanelStartX + 60, rightPanelStartY + 100, Qt.AlignCenter, 40, 40, f"攻击力：{99}")
-        painter.drawText(rightPanelStartX + 60, rightPanelStartY + 140, Qt.AlignCenter, 40, 40, f"等  级：{99}")
+        painter.drawText(rightPanelStartX + 60, rightPanelStartY + 60, Qt.AlignCenter, 40, 40, f"生命值：{self.game.player.hp}")
+        painter.drawText(rightPanelStartX + 60, rightPanelStartY + 100, Qt.AlignCenter, 40, 40, f"攻击力：{self.game.player.attack}")
+        painter.drawText(rightPanelStartX + 60, rightPanelStartY + 140, Qt.AlignCenter, 40, 40, f"等  级：{self.game.player.lv}")
 
         enemy_text_offset = 300
-        painter.drawText(rightPanelStartX + 60, enemy_text_offset + rightPanelStartY + 20, Qt.AlignCenter, 40, 40, f"敌  人")
-        painter.drawText(rightPanelStartX + 60, enemy_text_offset + rightPanelStartY + 60, Qt.AlignCenter, 40, 40, f"生命值：{99}")
-        painter.drawText(rightPanelStartX + 60, enemy_text_offset + rightPanelStartY + 100, Qt.AlignCenter, 40, 40, f"攻击力：{99}")
-        painter.drawText(rightPanelStartX + 60, enemy_text_offset + rightPanelStartY + 140, Qt.AlignCenter, 40, 40, f"等  级：{99}")
+        if(self.game.currentEnemy):
+            painter.drawText(rightPanelStartX + 60, enemy_text_offset + rightPanelStartY + 20, Qt.AlignCenter, 40, 40, f"敌  人")
+            painter.drawText(rightPanelStartX + 60, enemy_text_offset + rightPanelStartY + 60, Qt.AlignCenter, 40, 40, f"生命值：{self.game.currentEnemy.hp}")
+            painter.drawText(rightPanelStartX + 60, enemy_text_offset + rightPanelStartY + 100, Qt.AlignCenter, 40, 40, f"攻击力：{self.game.currentEnemy.attack}")
+            painter.drawText(rightPanelStartX + 60, enemy_text_offset + rightPanelStartY + 140, Qt.AlignCenter, 40, 40, f"经验值：{int(Enemy.BaseExpOnKill ** self.layer)}")
 
 
     def move(self, direction:tuple):
+
         playerPos = self.getPlayerPos(2)
         endPos = [playerPos[0] + direction[0], playerPos[1] + direction[1]]
         if(endPos[0] < 0 or endPos[0] > 14 or endPos[1] < 0 or endPos[1] > 14):
@@ -131,6 +161,9 @@ class Board(QFrame):
         elif(self[endPos[0], endPos[1]] == 0):
             self.grid[self.getPlayerPos(1)] = 0
             self[endPos[0], endPos[1]] = 'p'
+        elif(self[endPos[0], endPos[1]] == 8):
+            self.game.engage(self.getCellUnitData(endPos[0], endPos[1]))
+        elif(self[endPos[0], endPos[1]] == 8):
 
             
         #if(posEnd > self.boardWidth or posEnd < (self.boardWidth * (self.boardHeight - 1))):

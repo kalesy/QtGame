@@ -15,7 +15,7 @@ class RandomDungeon(QMainWindow):
         self.cellSize = 64
         self.board = Board(self, self.cellSize)
         self.game = Game(self.board)
-        self.board.game = game
+        self.board.game = self.game
         self.setCentralWidget(self.board)
 
 
@@ -28,7 +28,14 @@ class RandomDungeon(QMainWindow):
 
     def keyPressEvent(self, event):
         self.update()
-        self.game.keyevent(event.key())
+        gameevent = self.game.update()
+        if(gameevent == 'gameover'):
+            self.gameover()
+        else:
+            self.game.keyevent(event.key())
+
+    def gameover(self):
+        pass
 
 
     def paintEvent(self, event):
