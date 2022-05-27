@@ -24,10 +24,12 @@ class Enemy(Character):
     BaseAttack = 2
     BaseExpOnKill = 20
 
-    def __init__(self, layer):
+    def __init__(self, layer, imgoffset):
         hp = int((1.03 ** layer) * Enemy.BaseHP * random.uniform(1.0, 2.0))
         attack = int((1.02 ** layer) * Enemy.BaseAttack * random.uniform(1.0, 3.0))
         self.expOnKill = int((1.05 ** layer) * Enemy.BaseExpOnKill * random.uniform(1.0, 1.5))
+        print(self.expOnKill)
+        self.imgoffset = imgoffset
         super().__init__('enemy', hp, 0, attack)
 
 class Player(Character):

@@ -1,10 +1,11 @@
 from PyQt5.QtWidgets import QMainWindow, QFrame, QDesktopWidget, QApplication, QMessageBox
 from PyQt5.QtCore import Qt, pyqtSignal
-from PyQt5.QtGui import QPainter, QColor, QPixmap, QPen
+from PyQt5.QtGui import QPainter, QColor, QPixmap, QPen, QImage
 import sys, random, math
 
 from Board import Board
 from Game import Game
+from Resource import Resource
 
 class RandomDungeon(QMainWindow):
 
@@ -13,12 +14,23 @@ class RandomDungeon(QMainWindow):
     def __init__(self):
         super().__init__()
         self.cellSize = 64
-        self.board = Board(self, self.cellSize)
+        self.setWindowTitle("随机地牢")
+        res = Resource(
+                sand   = {  'floor':        QImage('imgs/brickfloor.png'), 
+                            'wall':         QImage('imgs/brickwall.png'),
+                            'outerWall':    QImage('imgs/outerWall.png')},
+
+                player = {  'knight':       QImage('imgs/player.png')},
+                mobs   = {  'mobs':         QImage('imgs/mobs.png')},
+                icons  = {  'icons':        QImage('imgs/icons.png')} 
+                )
+        self.board = Board(self, self.cellSize, res)
         self.game = Game(self.board)
         self.board.game = self.game
         self.setCentralWidget(self.board)
 
-        self.resize(self.board.boardWidth * self.cellSize + 16 + 200, self.board.boardHeight * self.cellSize + 16)
+        #self.resize(self.board.boardWidth * self.cellSize + 16 + 200, self.board.boardHeight * self.cellSize + 16)
+        self.setFixedSize(self.board.boardWidth * self.cellSize + 16 + 200, self.board.boardHeight * self.cellSize + 16)
 
         screen = QDesktopWidget().screenGeometry()
         size = self.geometry()

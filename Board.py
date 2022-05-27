@@ -1,6 +1,6 @@
 from PyQt5.QtWidgets import QFrame
 from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QColor
+from PyQt5.QtGui import QColor, QFont
 import random
 
 from Unit import Character, Enemy, Player, Wall, FakeWall, Unit
@@ -8,7 +8,8 @@ from Unit import Character, Enemy, Player, Wall, FakeWall, Unit
 
 class Board(QFrame):
 
-    def __init__(self, parent, cellSize):
+    def __init__(self, parent, cellSize, res):
+        self.res = res
         self.layer = 1
         self.cellSize = cellSize
         self.boardWidth = 15
@@ -84,7 +85,7 @@ class Board(QFrame):
         self.gridCellData = []
         for i in self.grid:
             if(i == 8):
-                self.gridCellData.append(Enemy(self.layer))
+                self.gridCellData.append(Enemy(self.layer, random.randint(0, 4) * 64))
             elif(i == 'fw'):
                 self.gridCellData.append(FakeWall(self.layer))
             else:
@@ -111,43 +112,61 @@ class Board(QFrame):
             for y in range(self.boardHeight):
                 gridX = x * self.cellSize + 8
                 gridY = y * self.cellSize + 8
+                # 外墙
                 if(self[x, y] == 9):
-                    painter.fillRect(gridX, gridY, self.cellSize, self.cellSize, QColor(0, 0, 0))
+                    if(y == 0 or y == self.boardHeight - 1 ):
+                        if(x != 0 and x != self.boardWidth - 1):
+                            painter.drawImage(gridX, gridY, self.res['sand']['outerWall'], 64 * 5 + 6 * 4 + 4, 2, 64, 64)
+                        else:
+                            painter.drawImage(gridX, gridY, self.res['sand']['outerWall'], 64 * 7 + 6 * 6 + 4, 64 + 6, 64, 64)
+                    elif(x == 0 or x == self.boardWidth - 1 ):
+                        if(y != 0 or y != self.boardHeight - 1):
+                            painter.drawImage(gridX, gridY, self.res['sand']['outerWall'], 64 * 6 + 6 * 5 + 4, 2, 64, 64)
+                # 玩家
                 elif(self[x, y] == 'p'):
-                    painter.fillRect(gridX, gridY, self.cellSize, self.cellSize, QColor(0, 0, 255))
+                    painter.drawImage(gridX, gridY, self.res['player']['knight'], 0, 0, 64, 64)
+                # 怪物
                 elif(self[x, y] == 8):
-                    painter.fillRect(gridX, gridY, self.cellSize, self.cellSize, QColor(255, 0, 0))
+                    painter.drawImage(gridX, gridY, self.res['mobs']['mobs'], self.getCellUnitData(x, y).imgoffset, 0, 64, 64)
+                # 内墙
                 elif(self[x, y] == 'w'):
-                    painter.fillRect(gridX, gridY, self.cellSize, self.cellSize, QColor(153, 153, 153))
+                    painter.drawImage(gridX, gridY, self.res['sand']['outerWall'], 64 * 7 + 6 * 6 + 4, 64 + 6, 64, 64)
+                # 假墙
                 elif(self[x, y] == 'fw'):
-                    painter.fillRect(gridX, gridY, self.cellSize, self.cellSize, QColor(90, 90, 90))
+                    painter.drawImage(gridX, gridY, self.res['sand']['wall'],0 ,0 , 64, 64)
+                # 终点
                 elif(self[x, y] == 'e'):
-                    painter.fillRect(gridX, gridY, self.cellSize, self.cellSize, QColor(100, 100, 100))
-                    #painter.fillRect(gridX, gridY, self.cellSize, self.cellSize, QColor(0, 153, 0))
-                        
-
-
-                #画格子
-                painter.drawRect(gridX, gridY, self.cellSize, self.cellSize)
+                    painter.drawImage(gridX, gridY, self.res['sand']['wall'],0 ,0 , 64, 64)
+                # 地板
+                else:
+                    painter.drawImage(gridX, gridY, self.res['sand']['outerWall'], 0, 0, 64, 64)
 
         # 状态界面
         rightPanelStartX = self.boardWidth * self.cellSize + 8
         rightPanelStartY = 8
 
+        painter.setFont(QFont("黑体", 15))
         painter.drawRect(rightPanelStartX, rightPanelStartY, 200, self.boardHeight * self.cellSize)
 
-        painter.drawText(rightPanelStartX + 60, rightPanelStartY + 20, Qt.AlignCenter, 40, 40, f"玩  家")
-        painter.drawText(rightPanelStartX + 60, rightPanelStartY + 60, Qt.AlignCenter, 40, 40, f"生命值：{self.game.player.hp}")
-        painter.drawText(rightPanelStartX + 60, rightPanelStartY + 100, Qt.AlignCenter, 40, 40, f"攻击力：{self.game.player.attack}")
-        painter.drawText(rightPanelStartX + 60, rightPanelStartY + 140, Qt.AlignCenter, 40, 40, f"等  级：{self.game.player.lv}")
+        painter.drawText(rightPanelStartX + 60, rightPanelStartY + 20 + 50,  Qt.AlignCenter, 40, 40, f"玩  家")
 
-        enemy_text_offset = 300
+        painter.drawText(rightPanelStartX + 50, rightPanelStartY + 60 + 50,  Qt.AlignCenter, 40, 40, f"生命值：{self.game.player.hp}")
+        painter.drawImage(rightPanelStartX,     rightPanelStartY + 60 + 50 - 10, self.res['icons']['icons'],0 ,0 , 48, 48)
+
+        painter.drawText(rightPanelStartX + 50, rightPanelStartY + 100 + 50, Qt.AlignCenter, 40, 40, f"攻击力：{self.game.player.attack}")
+        painter.drawImage(rightPanelStartX,     rightPanelStartY + 100 + 50 - 10, self.res['icons']['icons'],48 ,0 , 48, 48)
+        painter.drawText(rightPanelStartX + 50, rightPanelStartY + 140 + 50 + 10, Qt.AlignCenter, 40, 40, f"等  级：{self.game.player.lv}/{self.game.player.exp}")
+        painter.drawImage(rightPanelStartX - 10,rightPanelStartY + 140 + 50 - 10, self.res['icons']['icons'],48 * 2 ,0 , 64, 64)
+        
+        #painter.drawLine(rightPanelStartX - 10, rightPanelStartY + 140 + 50 - 10, rightPanelStartX - 10 + 100, rightPanelStartY + 140 + 50 - 10 + 20)
+
+        enemy_text_offset = 500
         if(self.game.currentEnemy):
-            painter.drawText(rightPanelStartX + 60, enemy_text_offset + rightPanelStartY + 20, Qt.AlignCenter, 40, 40, f"敌  人")
-            painter.drawText(rightPanelStartX + 60, enemy_text_offset + rightPanelStartY + 60, Qt.AlignCenter, 40, 40, f"生命值：{self.game.currentEnemy.hp}")
-            painter.drawText(rightPanelStartX + 60, enemy_text_offset + rightPanelStartY + 100, Qt.AlignCenter, 40, 40, f"攻击力：{self.game.currentEnemy.attack}")
-            painter.drawText(rightPanelStartX + 60, enemy_text_offset + rightPanelStartY + 140, Qt.AlignCenter, 40, 40, f"经验值：{int(Enemy.BaseExpOnKill ** self.layer)}")
-
+            painter.drawText(rightPanelStartX + 50, enemy_text_offset + rightPanelStartY + 20 + 50,  Qt.AlignCenter, 40, 40, f"敌  人")
+            painter.drawText(rightPanelStartX + 50, enemy_text_offset + rightPanelStartY + 60 + 50,  Qt.AlignCenter, 40, 40, f"生命值：{self.game.currentEnemy.hp}")
+            painter.drawImage(rightPanelStartX,     enemy_text_offset + rightPanelStartY + 60 + 50 - 10, self.res['icons']['icons'],0 ,0 , 48, 48)
+            painter.drawText(rightPanelStartX + 50, enemy_text_offset + rightPanelStartY + 100 + 50, Qt.AlignCenter, 40, 40, f"攻击力：{self.game.currentEnemy.attack}")
+            painter.drawImage(rightPanelStartX,     enemy_text_offset + rightPanelStartY + 100 + 50 - 10, self.res['icons']['icons'],48 ,0 , 48, 48)
 
     def move(self, direction:tuple):
 
